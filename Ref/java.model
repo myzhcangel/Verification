@@ -1,0 +1,67 @@
+short locked[NUM_LOCKS] = -1;
+chan WAIT[NUM_LOCKS] = [0] of {bit};
+short waiting[NUM_LOCKS] = 0;
+short lockDepth[NUM_LOCKS] = 0;
+
+inline _synchronized(obj) {
+	_getLock(obj);
+	lockDepth[obj] = lockDepth[obj] + 1;
+}
+
+inline _exit_synchronized(obj) {
+	lockDepth[obj] = lockDepth[obj] - 1;
+	if
+	:: (lockDepth[obj] == 0)
+		-> _releaseLock(obj);
+	:: else
+		-> skip;
+	fi;
+}
+
+inline _getLock(obj) {
+	atomic {
+	if
+//	:: (locked[obj] == _pid)
+//		-> skip;
+	:: (locked[obj] == -1)
+		-> locked[obj] = _pid;
+	fi;
+	}
+}
+
+inline _releaseLock(obj) {
+	assert(locked[obj] == _pid);
+	locked[obj] = -1;
+}
+
+inline _wait(obj) {
+	assert(locked[obj] == _pid);
+	atomic {
+	_releaseLock(obj);
+	lockDepth[obj] = lockDepth[obj] - 1;
+	waiting[obj] = waiting[obj] + 1;
+	WAIT[obj]?0;
+	};
+	_getLock(obj);
+	lockDepth[obj] = lockDepth[obj] + 1;
+}
+
+inline _notify(obj) {
+	assert(locked[obj] == _pid);
+	if
+	:: (waiting[obj] > 0)
+		-> WAIT[obj]!0;
+		waiting[obj] = waiting[obj] - 1;
+	:: else -> skip;
+	fi;
+}
+
+inline _notifyAll(obj) {
+	assert(locked[obj] == _pid);
+	do
+	:: (waiting[obj] > 0)
+		-> WAIT[obj]!0;
+		waiting[obj] = waiting[obj] - 1;
+	:: else -> break;
+	od;
+}
