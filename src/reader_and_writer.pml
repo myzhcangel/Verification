@@ -1,61 +1,61 @@
 int num_readers = 0;
 int num_writers = 0;
-int lock_pid = -1;
-int mutex_lock = -1;
+int writing_lock_pid = -1;
+int mutex_lock_pid = -1;
 
-inline get_lock() {
+inline writing_lock() {
 	atomic {
-		(lock_pid == -1) -> lock_pid = _pid;
+		(writing_lock_pid == -1) -> writing_lock_pid = _pid;
 	}
 }
 
-inline release_lock() {
+inline writing_unlock() {
 	atomic {
-		lock_pid = -1;
+		writing_lock_pid = -1;
 	}
 }
 
-inline mutex_get_lock() {
+inline mutex_lock() {
 	atomic {
-		(mutex_lock == -1) -> mutex_lock = _pid;
+		(mutex_lock_pid == -1) -> mutex_lock_pid = _pid;
 	}
 }
 
-inline mutex_release_lock() {
+inline mutex_unlock() {
 	atomic {
-		mutex_lock = -1;
+		mutex_lock_pid = -1;
 	}
 }
 
 active [4] proctype read() {
 
 	// Start reading
-	mutex_get_lock();
+	mutex_lock();
 	if
-	:: (num_readers == 0) -> get_lock();
+	:: (num_readers == 0) -> writing_lock();
 	:: else -> skip;
 	fi
 	num_readers++;
-	mutex_release_lock();
+	mutex_unlock();
 
 	// Critical Section
 	assert(num_readers > 0);
 	assert(num_writers == 0);
 
 	// End reading
-	mutex_get_lock();
+	mutex_lock();
 	num_readers--;
 	if
-	:: (num_readers == 0) -> release_lock();
+	:: (num_readers == 0) -> writing_unlock();
 	:: else ->skip;
 	fi
-	mutex_release_lock();
+	mutex_unlock();
 }
 
 active [2] proctype write() {
 
 	// Start writing
-	get_lock();
+	writing_lock();
 
 	// Critical Section
 	num_writers++;
@@ -64,5 +64,5 @@ active [2] proctype write() {
 	num_writers--;
 
 	// End writing
-	release_lock();
+	writing_unlock();
 }
