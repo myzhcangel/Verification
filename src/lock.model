@@ -1,8 +1,12 @@
-#define NUM_OF_PROCESSES 4
+#define NUM_OF_PROCESSES 2
 
 bool choosing[NUM_OF_PROCESSES];
 int number[NUM_OF_PROCESSES];
 int count = 0;
+
+bool deadlock_wantCS[NUM_OF_PROCESSES];
+
+int starvation_turn = 0;
 
 inline bakery_lock() {
 	int id = _pid - 1;
@@ -34,35 +38,19 @@ inline bakery_unlock() {
 	number[_pid - 1] = 0;
 }
 
-proctype process() {
-
-	bakery_lock();
-
-	// Critical Section
-	count++;
-	assert(count == 1);
-	count--;
-
-	bakery_unlock();
+inline deadlock_lock() {
+	deadlock_wantCS[_pid - 1] = 1;
+	(deadlock_wantCS[1 - _pid + 1] == 0);
 }
 
-init {
-	atomic {
-		int i = 0;
-		do
-		:: i < NUM_OF_PROCESSES -> 
-			choosing[i] = 0;
-			number[i] = 0;
-			i++
-		:: else -> break
-		od
-	}
+inline deadlock_unlock() {
+	deadlock_wantCS[_pid - 1] = 0;
+}
 
-	int i = 0;
-	do
-	:: i < NUM_OF_PROCESSES ->
-		run process();
-		i++
-	:: else -> break
-	od
+inline starvation_lock() {
+	(starvation_turn == _pid - 1);
+}
+
+inline starvation_unlock() {
+	starvation_turn = 1 - _pid + 1;
 }
