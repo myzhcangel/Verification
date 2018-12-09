@@ -6,8 +6,8 @@ In the src folder, we put all the SPIN models that we bulit here.
 
 1) src/lock includes several lock models: Peterson's lock, PetersonN's lock, Lamport's bakery lock and Fischer's lock.
 2) src/stack_and_queue includes concurrent lock-based stack and queue models.
-3) classic_models includes: ReaderAndWriter, DiningPhilosophers and ProducerAndConsumer models.
-4) case_study includes some experiments related to deadlock, starvation and combination verification.
+3) src/classic_models includes: ReaderAndWriter, DiningPhilosophers and ProducerAndConsumer models.
+4) src/case_study includes some experiments related to deadlock, starvation and combination verification.
 
 ## How to run
 
