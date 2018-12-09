@@ -1,0 +1,22 @@
+#define NUM_LOCKS 1
+#include "java.model"
+
+inline synchronized() {
+	_synchronized(0);
+}
+
+inline exit_synchronized() {
+	_exit_synchronized(0);
+}
+
+inline wait() {
+	_wait(0);
+}
+
+inline notify() {
+	_notify(0);
+}
+
+inline notifyAll() {
+	_notifyAll(0);
+}
