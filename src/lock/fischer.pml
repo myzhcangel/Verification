@@ -4,7 +4,7 @@ int turn = -1;
 int num_block = 0;
 int count = 0;
 
-active [N] proctype P() { 
+active [N] proctype user() { 
 Start:
     // Request lock
     atomic {

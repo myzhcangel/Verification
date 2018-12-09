@@ -17,41 +17,29 @@ inline writing_unlock() {
 	}
 }
 
-inline mutex_lock() {
-	atomic {
-		(mutex_lock_pid == -1) -> mutex_lock_pid = _pid;
-	}
-}
-
-inline mutex_unlock() {
-	atomic {
-		mutex_lock_pid = -1;
-	}
-}
-
 proctype read() {
 
 	// Start reading
-	deadlock_lock();
+	starvation_lock();
 	if
 	:: (num_readers == 0) -> writing_lock();
 	:: else -> skip;
 	fi
 	num_readers++;
-	deadlock_unlock();
+	starvation_unlock();
 
 	// Critical Section
 	assert(num_readers > 0);
 	assert(num_writers == 0);
 
 	// End reading
-	deadlock_lock();
+	starvation_lock();
 	num_readers--;
 	if
 	:: (num_readers == 0) -> writing_unlock();
 	:: else ->skip;
 	fi
-	deadlock_unlock();
+	starvation_unlock();
 }
 
 proctype write() {
@@ -70,16 +58,6 @@ proctype write() {
 }
 
 init {
-	atomic {
-		int i = 0;
-		do
-		:: i < NUM_OF_PROCESSES -> 
-			deadlock_wantCS[i] = 0;
-			i++
-		:: else -> break
-		od
-	}
-	run read();
 	run read();
 	run write();
 	run write();
